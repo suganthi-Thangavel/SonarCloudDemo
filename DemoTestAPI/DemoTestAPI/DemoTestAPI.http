@@ -1,0 +1,6 @@
+@DemoTestAPI_HostAddress = http://localhost:5275/api
+
+GET {{DemoTestAPI_HostAddress}}/sample/
+Accept: application/json
+
+###
