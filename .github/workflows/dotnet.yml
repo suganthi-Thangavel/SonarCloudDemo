@@ -3,11 +3,13 @@
 
 name: SonarCloud Analysis
 
-on:
-  push:
-    branches:
-      - main
+permissions:
+  contents: read
+  pull-requests: write
 
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
 jobs:
   sonarcloud:
     runs-on: ubuntu-latest
