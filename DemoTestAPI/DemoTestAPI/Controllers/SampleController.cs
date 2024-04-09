@@ -10,6 +10,7 @@ namespace DemoTestAPI.Controllers
         [HttpGet]
         public IActionResult Get()
         {
+            var tetsstr="ggggg";
             return Ok(new { message = "Hello from Web API!" });
         }
     }
