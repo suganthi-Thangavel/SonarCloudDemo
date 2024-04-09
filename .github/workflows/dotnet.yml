@@ -1,46 +1,54 @@
-name: Build
+# This workflow will build a .NET project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
+
+name: SonarCloud Analysis
+
+permissions:
+  contents: read
+  pull-requests: write
 
 on:
-  push:
-    branches:
-      - main
-
-
+  pull_request:
+    types: [opened, reopened, synchronize]
 jobs:
-  build:
-    name: Build
-    runs-on: windows-latest
-    permissions: read-all
+  sonarcloud:
+    runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-      - name: Set up JDK 17
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        
+      - name: Setup Java
         uses: actions/setup-java@v1
         with:
-          java-version: 17
-      - name: Cache SonarQube packages
-        uses: actions/cache@v1
+          java-version: '17'  # Adjust the version as needed
+
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v1
         with:
-          path: ~\.sonar\cache
-          key: ${{ runner.os }}-sonar
-          restore-keys: ${{ runner.os }}-sonar
-      - name: Cache SonarQube scanner
-        id: cache-sonar-scanner
-        uses: actions/cache@v1
-        with:
-          path: .\.sonar\scanner
-          key: ${{ runner.os }}-sonar-scanner
-          restore-keys: ${{ runner.os }}-sonar-scanner
-      - name: Install SonarQube scanner
-        if: steps.cache-sonar-scanner.outputs.cache-hit != 'true'
-        shell: powershell
+          dotnet-version: '8.0'  # Adjust the version as needed
+
+      # Add OpenAI Code Review
+      - name: Analyze Code Changes with OpenAI
+        id: openai_code_review
         run: |
-          New-Item -Path .\.sonar\scanner -ItemType Directory
-          dotnet tool update dotnet-sonarscanner --tool-path .\.sonar\scanner
-      - name: Build and analyze
-        shell: powershell
+          # Fetch code changes from the pull request or push event
+          # Process code changes (e.g., extract files, format code)
+          # Send code changes to OpenAI for analysis
+          # Parse analysis results and store them for further processing
+          
+          # Example command (replace with actual implementation)
+          echo "::set-output name=analysis_results::{\"issues\": [{\"type\": \"code_smell\", \"description\": \"Potential issue detected by OpenAI\"}]}"
+
+      - name: Process Analysis Results and Provide Feedback
+        if: ${{ steps.openai_code_review.outputs.analysis_results }}
         run: |
-          .\.sonar\scanner\dotnet-sonarscanner begin /k:"TestApp1" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="${{ secrets.SONAR_HOST_URL }}"
-          dotnet build
-          .\.sonar\scanner\dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
+          # Parse analysis results from previous step
+          analysis_results=$(echo "${{ steps.openai_code_review.outputs.analysis_results }}" | jq -r .)
+          
+          # Provide feedback on pull request or push event based on analysis results
+          # Example: create comments on pull request or open issues with feedback
+          echo "Feedback: $analysis_results"
+          
+          # If necessary, fail the workflow based on severity of issues
+          # Example: if [[ "$analysis_results" == *"critical"* ]]; then exit 1; fi
